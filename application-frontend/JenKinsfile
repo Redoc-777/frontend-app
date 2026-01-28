@@ -1,0 +1,58 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "frontend-jenkins-demo"
+        CONTAINER_NAME = "frontend-demo"
+        TRIVY_PATH = "C:\\Users\\akalmoun\\Downloads\\trivy_0.68.2_windows-64bit\\trivy.exe"
+    }
+
+    triggers {
+        githubPush()
+    }
+
+    stages {
+
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Redoc-777/frontend-app.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                bat """
+                cd application-frontend
+                docker build -t %IMAGE_NAME%:latest .
+                """
+            }
+        }
+
+        stage('Security Scan with Trivy') {
+            steps {
+                bat """
+                "%TRIVY_PATH%" image --exit-code 0 --severity HIGH,CRITICAL %IMAGE_NAME%:latest
+                """
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                bat """
+                docker rm -f %CONTAINER_NAME% || exit 0
+                docker run -d -p 8081:80 --name %CONTAINER_NAME% %IMAGE_NAME%:latest
+                """
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Deployment successful 🎉 Application available on http://localhost:8081"
+        }
+        failure {
+            echo "Pipeline failed ❌"
+        }
+    }
+}
