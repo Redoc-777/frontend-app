@@ -1,10 +1,394 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>CI/CD Jenkins Demo</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CI/CD — Jenkins Deployment</title>
+  <style>
+    :root{
+      --bg1:#0b1220;
+      --bg2:#0e1a33;
+      --card:#101b32cc;
+      --border:#1d2a4b;
+      --text:#e8eefc;
+      --muted:#a8b4d6;
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --accent:#60a5fa;
+      --shadow: 0 18px 45px rgba(0,0,0,.45);
+      --radius: 18px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 10% 10%, #1b3a8a55 0%, transparent 55%),
+        radial-gradient(900px 700px at 90% 20%, #22c55e33 0%, transparent 60%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:32px;
+    }
+
+    .wrap{width:min(980px, 100%);}
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:18px;
+    }
+
+    .brand{
+      display:flex;
+      gap:14px;
+      align-items:center;
+    }
+
+    .logo{
+      width:46px;height:46px;border-radius:14px;
+      background: linear-gradient(135deg, #60a5fa, #22c55e);
+      box-shadow: 0 12px 22px rgba(96,165,250,.25);
+      display:grid;place-items:center;
+      color:#081024;
+      font-weight:800;
+      letter-spacing:.5px;
+    }
+
+    .title h1{
+      font-size:22px;
+      margin:0;
+      line-height:1.2;
+      letter-spacing:.2px;
+    }
+    .title p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .badge{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:rgba(16,27,50,.55);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 10px 25px rgba(0,0,0,.25);
+      font-size:13px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background:var(--good);
+      box-shadow: 0 0 0 4px rgba(34,197,94,.18);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap:18px;
+    }
+
+    .card{
+      border:1px solid var(--border);
+      background:var(--card);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .card .top{
+      padding:18px 18px 14px;
+      border-bottom:1px solid rgba(29,42,75,.8);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .card h2{
+      margin:0;
+      font-size:16px;
+      letter-spacing:.2px;
+    }
+    .card p{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .content{padding:18px;}
+
+    .kv{
+      display:grid;
+      grid-template-columns: 140px 1fr;
+      gap:10px 14px;
+      align-items:center;
+      padding:14px;
+      border:1px solid rgba(29,42,75,.8);
+      border-radius: 14px;
+      background: rgba(9,14,28,.35);
+    }
+    .k{color:var(--muted); font-size:12px;}
+    .v{
+      font-size:13px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    code{
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(29,42,75,.8);
+      background: rgba(12,18,38,.55);
+      color:#dbe6ff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12px;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    button{
+      cursor:pointer;
+      border:1px solid rgba(29,42,75,.9);
+      background: linear-gradient(135deg, rgba(96,165,250,.15), rgba(34,197,94,.12));
+      color:var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      font-size:13px;
+      transition: transform .08s ease, border-color .2s ease;
+    }
+    button:hover{border-color: rgba(96,165,250,.6);}
+    button:active{transform: translateY(1px);}
+    .secondary{
+      background: rgba(12,18,38,.55);
+    }
+
+    .steps{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .step{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      padding:12px 12px;
+      border:1px solid rgba(29,42,75,.8);
+      border-radius: 14px;
+      background: rgba(9,14,28,.35);
+    }
+    .num{
+      width:30px;height:30px;border-radius:10px;
+      background: rgba(96,165,250,.18);
+      border:1px solid rgba(96,165,250,.35);
+      display:grid;place-items:center;
+      font-weight:700;
+      color:#cfe2ff;
+      flex:0 0 auto;
+    }
+    .step b{display:block; font-size:13px; margin-top:2px;}
+    .step small{color:var(--muted); line-height:1.45;}
+
+    footer{
+      margin-top:18px;
+      color:rgba(168,180,214,.8);
+      font-size:12px;
+      text-align:center;
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    @media (max-width: 860px){
+      .grid{grid-template-columns: 1fr;}
+      .kv{grid-template-columns: 120px 1fr;}
+    }
+  </style>
 </head>
+
 <body>
-  <h1>Hello from Jenkins CI/CD </h1>
-  <p>Frontend container deployed automatically</p>  
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">CI</div>
+        <div class="title">
+          <h1>Jenkins CI/CD Deployment</h1>
+          <p>A clean demo UI for your pipeline: build → scan → deploy</p>
+        </div>
+      </div>
+
+      <div class="badge" title="This is a demo status badge">
+        <span class="dot" id="dot"></span>
+        <span id="statusText">Deployed successfully</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Left: Details -->
+      <section class="card">
+        <div class="top">
+          <div>
+            <h2>Release details</h2>
+            <p>Use this page to showcase automated deployments and security gates in your pipeline.</p>
+          </div>
+          <code id="time"></code>
+        </div>
+
+        <div class="content">
+          <div class="kv">
+            <div class="k">Environment</div>
+            <div class="v"><code id="env">production</code> <span class="k">change it in HTML</span></div>
+
+            <div class="k">Build</div>
+            <div class="v"><code id="build">#42</code> <span class="k">example</span></div>
+
+            <div class="k">Commit</div>
+            <div class="v"><code id="commit">a1b2c3d</code> <span class="k">example</span></div>
+
+            <div class="k">Image</div>
+            <div class="v"><code id="image">frontend:42</code></div>
+
+            <div class="k">Security</div>
+            <div class="v">
+              <code id="scan">Trivy: PASS</code>
+              <span class="k">HIGH/CRITICAL blocked</span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="toggle">Toggle status</button>
+            <button class="secondary" id="copy">Copy summary</button>
+          </div>
+
+          <p id="toast" style="margin-top:12px; color: var(--muted); display:none;"></p>
+        </div>
+      </section>
+
+      <!-- Right: Pipeline steps -->
+      <aside class="card">
+        <div class="top">
+          <div>
+            <h2>Pipeline stages</h2>
+            <p>What your CI/CD does automatically.</p>
+          </div>
+        </div>
+        <div class="content">
+          <div class="steps">
+            <div class="step">
+              <div class="num">1</div>
+              <div>
+                <b>Checkout</b>
+                <small>Pull code from GitHub / GitLab via webhook trigger.</small>
+              </div>
+            </div>
+            <div class="step">
+              <div class="num">2</div>
+              <div>
+                <b>Build image</b>
+                <small>Build the container image using your Dockerfile.</small>
+              </div>
+            </div>
+            <div class="step">
+              <div class="num">3</div>
+              <div>
+                <b>Security scan</b>
+                <small>Trivy scan — fail build on HIGH/CRITICAL vulnerabilities.</small>
+              </div>
+            </div>
+            <div class="step">
+              <div class="num">4</div>
+              <div>
+                <b>Deploy</b>
+                <small>Deploy automatically to your target environment.</small>
+              </div>
+            </div>
+          </div>
+
+          <p style="margin-top:14px; color: var(--muted); font-size:12px;">
+            Tip: You can populate build/commit values via environment variables during container startup.
+          </p>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      Built for demos • Works as a single <code>index.html</code> • <a href="#" onclick="return false;">No dependencies</a>
+    </footer>
+  </div>
+
+  <script>
+    // Live clock (nice for demos)
+    const timeEl = document.getElementById("time");
+    function tick(){
+      const d = new Date();
+      timeEl.textContent = d.toLocaleString();
+    }
+    tick(); setInterval(tick, 1000);
+
+    // Toggle deployment status (demo interaction)
+    const dot = document.getElementById("dot");
+    const statusText = document.getElementById("statusText");
+    let ok = true;
+
+    document.getElementById("toggle").addEventListener("click", () => {
+      ok = !ok;
+      if(ok){
+        dot.style.background = "var(--good)";
+        dot.style.boxShadow = "0 0 0 4px rgba(34,197,94,.18)";
+        statusText.textContent = "Deployed successfully";
+      }else{
+        dot.style.background = "var(--warn)";
+        dot.style.boxShadow = "0 0 0 4px rgba(245,158,11,.18)";
+        statusText.textContent = "Attention required";
+      }
+    });
+
+    // Copy summary (useful for sharing)
+    const toast = document.getElementById("toast");
+    document.getElementById("copy").addEventListener("click", async () => {
+      const summary =
+`Jenkins CI/CD Deployment
+Environment: ${document.getElementById("env").textContent}
+Build: ${document.getElementById("build").textContent}
+Commit: ${document.getElementById("commit").textContent}
+Image: ${document.getElementById("image").textContent}
+Security: ${document.getElementById("scan").textContent}
+Status: ${statusText.textContent}`;
+
+      try{
+        await navigator.clipboard.writeText(summary);
+        toast.style.display = "block";
+        toast.textContent = "✅ Summary copied to clipboard.";
+        setTimeout(()=> toast.style.display="none", 2500);
+      }catch(e){
+        toast.style.display = "block";
+        toast.textContent = "Copy not allowed in this browser context. Select and copy manually.";
+        setTimeout(()=> toast.style.display="none", 3000);
+      }
+    });
+
+    // Optional: allow setting values from query params for quick demo
+    // Example: ?env=dev&build=99&commit=deadbee&image=frontend:99&scan=Trivy:%20PASS
+    const params = new URLSearchParams(location.search);
+    const map = { env:"env", build:"build", commit:"commit", image:"image", scan:"scan" };
+    for (const [k, id] of Object.entries(map)) {
+      if (params.get(k)) document.getElementById(id).textContent = params.get(k);
+    }
+  </script>
 </body>
 </html>
